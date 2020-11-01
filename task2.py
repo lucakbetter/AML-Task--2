@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.metrics import balanced_accuracy_score
 from sklearn.feature_selection import SelectKBest, f_classif, mutual_info_regression, f_regression, chi2
 from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
 
 from load_data import dataframes, nanInfo, countValues
@@ -10,12 +11,12 @@ from outlier_detection import isolation_forest, local_outlier
 from feature_selection import kBest
 from cross_validation import CV_score
 
-crossval = True
+crossval = False
 
 def preprocess(x, y, x_test):
 	#	OUTLIER DETECTION
 	#x_train, y_train = isolation_forest(x_train, y_train)
-	x, y = local_outlier(x, y)
+	#x, y = local_outlier(x, y)
 	
 	#	SCALING
 	scaler = StandardScaler().fit(x)
@@ -23,13 +24,13 @@ def preprocess(x, y, x_test):
 	x_test = scaler.transform(x_test)
 	
 	#	FEATURE SELECTION
-	x, x_test = kBest(x, y, x_test, f_classif, 50)
+	#x, x_test = kBest(x, y, x_test, f_regression, 50)
 	
 	return x, y, x_test
 	
 	
 def model(x, y, x_test):
-	clf = LogisticRegression(random_state=0).fit(x, y)
+	clf = SVC(random_state=0, C=0.5, kernel='rbf', class_weight='balanced', decision_function_shape='ovr').fit(x, y)
 	y_pred = clf.predict(x_test)
 	return y_pred
 	
@@ -43,6 +44,7 @@ def main():
 		#	CROSS-VALIDATION
 		score = CV_score(x, y, model, balanced_accuracy_score)	
 		print(score)
+		countValues(y, 'initial y')
 	else:
 		#	Y-TEST
 		countValues(y, 'initial y')
